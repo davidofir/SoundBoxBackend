@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require('cors');
-const port = 8080;
+const PORT = process.env.PORT || 8080;
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 
@@ -14,6 +14,6 @@ app.get('/:artist',cors(),async(req,res)=>{
     await res.json(results)
 })
 
-app.listen(port,()=>{
-    console.log(`app is listening on port ${port}`);
+app.listen(PORT,()=>{
+    console.log(`app is listening on port ${PORT}`);
 })
