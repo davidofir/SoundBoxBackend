@@ -1,7 +1,6 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const puppeteer = require('puppeteer');
 const merchRepo = require('./repositories/MerchRepo');
 const http = require('http');
 const server = http.createServer(app);
@@ -24,6 +23,6 @@ app.get('/topic/:artist', cors(), async (req, res) => {
 });
 
 
-server.listen(PORT, () => {
+server.listen(PORT,'0.0.0.0', () => {
   console.log(`app is listening on port ${PORT}`);
 });
