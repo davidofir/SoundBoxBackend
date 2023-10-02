@@ -25,7 +25,7 @@ async function getHotTopicMerch(artistName) {
     const productTitles = await (await page.$$eval('.product-tile', elements => elements.map(el => el.innerText))).filter((text)=>text.toLowerCase().includes(artistName.toLowerCase()));
     let foundContent = productTitles.map(item=>item.split("\n"));
     foundContent.map((content,index)=>results = [...results,{
-      name:content[0],
+      name:content[0].replace('Quick View for ',''),
       price:content[1],
       image:imgTags[index],
       link:link[index]
