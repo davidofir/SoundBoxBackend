@@ -13,6 +13,7 @@
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "merchnow-api-node": "^1.0.4",
-    "node": "^19.1.0"
+    "node": "^19.1.0",
+    "puppeteer": "^21.3.6"
   }
 }
