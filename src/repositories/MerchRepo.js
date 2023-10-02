@@ -1,10 +1,14 @@
 const puppeteer = require('puppeteer');
 
 async function getHotTopicMerch(artistName) {
-    let results = [];
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.goto(`https://www.hottopic.com/search?q=${artistName}&search-button=&lang=default`);
+  let results = [];
+  const browser = await puppeteer.launch({
+    headless: true, // Run in headless mode
+    args: ['--no-sandbox', '--disable-setuid-sandbox'], // Disable sandbox if necessary
+  });
+  const page = await browser.newPage();
+  await page.goto(`https://www.hottopic.com/search?q=${artistName}&search-button=&lang=default`);
+
   
     // Extract all img tags from the page
     const imgTags = await page.evaluate((artistName) => {
