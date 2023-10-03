@@ -3,37 +3,50 @@ const puppeteer = require('puppeteer');
 async function getHotTopicMerch(artistName) {
   let results = [];
   const browser = await puppeteer.launch({
-    headless: true, // Run in headless mode
-    args: ['--no-sandbox', '--disable-setuid-sandbox'], // Disable sandbox if necessary
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
+
   const page = await browser.newPage();
   await page.goto(`https://www.hottopic.com/search?q=${artistName}&search-button=&lang=default`);
 
-  
-    // Extract all img tags from the page
-    const imgTags = await page.evaluate((artistName) => {
-      const images = Array.from(document.querySelectorAll('img')).filter((img)=>img.alt.toLowerCase().includes(artistName.toLowerCase()) && img.src.includes("_hi?"));
-      return images.map((img) => img.src);
-    },artistName);
-  
-    const link = await page.evaluate((artistName) => {
-      const images = Array.from(document.querySelectorAll('a.link'))
-  
-      return images.map((link)=>link.href).filter(source => source.includes( artistName.toLowerCase().replace(/ /g,"-")))
-    },artistName);
-  
-    const productTitles = await (await page.$$eval('.product-tile', elements => elements.map(el => el.innerText))).filter((text)=>text.toLowerCase().includes(artistName.toLowerCase()));
-    let foundContent = productTitles.map(item=>item.split("\n"));
-    foundContent.map((content,index)=>results = [...results,{
-      name:content[0].replace('Quick View for ',''),
-      price:content[1],
-      image:imgTags[index],
-      link:link[index]
-    }])
-    //console.log(results)
-    await browser.close();
-    return results;
-  }
-module.exports = {
-    getHotTopicMerch,
+  const imgTags = await page.evaluate((artistName) => {
+    const images = Array.from(document.querySelectorAll('img'))
+      .filter(img => img.alt.toLowerCase().includes(artistName.toLowerCase()) && img.src.includes("_hi?"));
+    return images.map(img => img.src);
+  }, artistName);
+
+  const links = await page.evaluate((artistName) => {
+    return Array.from(document.querySelectorAll('a.link'))
+      .map(link => link.href)
+      .filter(href => href.includes(artistName.toLowerCase().replace(/ /g, "-")));
+  }, artistName);
+
+  const productDetails = await page.$$eval('.product-tile', elements => elements.map(el => {
+    const nameElement = el.querySelector('.pdp-link .link');
+    const priceElement = el.querySelector('.price .value');
+
+    return {
+      name: nameElement ? nameElement.innerText.trim() : null,
+      price: priceElement ? priceElement.innerText.trim() : null
+    };
+  }));
+
+  productDetails.forEach((detail, index) => {
+    if (detail.name && detail.name.toLowerCase().includes(artistName.toLowerCase())) {
+      results.push({
+        name: detail.name,
+        price: detail.price,
+        image: imgTags[index],
+        link: links[index]
+      });
+    }
+  });
+
+  await browser.close();
+  return results;
 }
+
+module.exports = {
+  getHotTopicMerch,
+};
