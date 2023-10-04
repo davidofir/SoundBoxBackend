@@ -1,9 +1,11 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const puppeteer = require('puppeteer');
 const merchRepo = require('./repositories/MerchRepo');
 const http = require('http');
 const server = http.createServer(app);
+const setupSocket = require('./socket/socket');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -22,6 +24,7 @@ app.get('/topic/:artist', cors(), async (req, res) => {
   res.json(results);
 });
 
+const io = setupSocket(server);
 
 server.listen(PORT,'0.0.0.0', () => {
   console.log(`app is listening on port ${PORT}`);
