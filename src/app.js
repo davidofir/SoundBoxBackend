@@ -30,15 +30,22 @@ app.get('/topic/:artist', cors(), async (req, res) => {
 app.get('/getPastMessages/:roomId', cors(), async (req, res) => {
   try {
     const { roomId } = req.params;
-    const messagesRef = db.collection('chatRooms').doc(roomId).collection('messages');
-    const snapshot = await messagesRef.orderBy('createdAt', 'desc').get();
-    const messages = snapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }));
-    res.json(messages);
+    const roomDocRef = db.collection('chat-rooms').doc(roomId);
+    const doc = await roomDocRef.get();
+    if (doc.exists) {
+      const roomData = doc.data();
+      const messages = roomData.messages || [];
+      res.json(messages);
+    } else {
+      console.error('No such document!');
+      res.status(404).send('Room Not Found');
+    }
   } catch (error) {
     console.error('Error fetching messages:', error);
     res.status(500).send('Internal Server Error');
   }
 });
+
 app.post('/createMessage', cors(), async (req, res) => {
   try {
     const { roomId, messageText } = req.body;
