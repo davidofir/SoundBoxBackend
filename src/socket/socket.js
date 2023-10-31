@@ -29,7 +29,7 @@ function setupSocket(server) {
         await messagesCollection.add({
             message: message.text,
             timestamp: admin.firestore.FieldValue.serverTimestamp(),  // <-- Updated line
-            senderID: message.senderID,
+            senderID: message.user._id,
         });
     
         // Broadcast the message to all users in the room
