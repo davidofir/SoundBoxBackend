@@ -55,7 +55,7 @@ app.post('/createMessage', cors(), async (req, res) => {
       return;
     }
 
-    const messagesRef = db.collection('chatRooms').doc(roomId).collection('messages');
+    const messagesRef = db.collection('chat-rooms').doc(roomId).collection('messages');
     const newMessageRef = messagesRef.doc();
     await newMessageRef.set({
       text: messageText,
