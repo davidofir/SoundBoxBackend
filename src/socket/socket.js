@@ -1,4 +1,5 @@
 const { Server } = require('socket.io');
+const { admin, db } = require('../firebase');  // Import from your config file
 
 function setupSocket(server) {
   const io = new Server(server, {
@@ -8,27 +9,46 @@ function setupSocket(server) {
   });
 
   io.on('connection', (socket) => {
-    console.log(`⚡: ${socket.id} user just connected!`); // Log new user connection
+    console.log(`⚡: ${socket.id} user just connected!`);  // Log new user connection
 
     socket.on('join-room', (roomId, userId) => {
       socket.join(roomId);
 
-      console.log(`User ${userId} joined room ${roomId}`); // Log user joining room
+      console.log(`User ${userId} joined room ${roomId}`);  // Log user joining room
 
       // Emit a message to the room that a new user has joined
       socket.to(roomId).emit('user-connected', userId);
 
       // Listen for incoming messages from the room
-      socket.on('message', (message) => {
-        console.log('Received message:', message); // Log the received message
-        console.log(`To room`,roomId)
+      socket.on('message', async (message) => {  // Made async to allow await
+        console.log('Received message:', message);  // Log the received message
+        console.log(`To room`, roomId);
+
+        // Save the message to Firestore
+        const messagesCollection = db.collection('chat-rooms').doc(roomId).collection('messages');
+        await messagesCollection.add({
+          message: message.text,
+          timestamp: message.timestamp,
+          senderID: message.senderID,
+        });
+
         // Broadcast the message to all users in the room
         socket.to(roomId).emit('message', message);
+
+        // Check message count and trim old messages if necessary
+        const maxMessages = 50;  // Adjust as needed
+        const snapshot = await messagesCollection.orderBy('timestamp').get();
+        if (snapshot.size > maxMessages) {
+          const oldMessagesSnapshot = await messagesCollection.orderBy('timestamp').limit(snapshot.size - maxMessages).get();
+          const batch = db.batch();
+          oldMessagesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
+        }
       });
 
       // Leave the chat room when the user disconnects
       socket.on('disconnect', () => {
-        console.log(`User ${userId} disconnected`); // Log user disconnection
+        console.log(`User ${userId} disconnected`);  // Log user disconnection
 
         socket.to(roomId).emit('user-disconnected', userId);
         socket.leave(roomId);
