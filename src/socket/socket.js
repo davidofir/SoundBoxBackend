@@ -26,25 +26,30 @@ function setupSocket(server) {
     
         // Save the message to Firestore
         const messagesCollection = db.collection('chat-rooms').doc(roomId).collection('messages');
-        await messagesCollection.add({
-            message: message.text,
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),  // <-- Updated line
-            senderID: message.user._id,
-        });
+        try {
+            await messagesCollection.add({
+                message: message.text,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                senderID: message.user._id,
+            });
     
-        // Broadcast the message to all users in the room
-        socket.to(roomId).emit('message', message);
+            // Broadcast the message to all users in the room
+            socket.to(roomId).emit('message', message);
     
-        // Check message count and trim old messages if necessary
-        const maxMessages = 50;  // Adjust as needed
-        const snapshot = await messagesCollection.orderBy('timestamp').get();
-        if (snapshot.size > maxMessages) {
-            const oldMessagesSnapshot = await messagesCollection.orderBy('timestamp').limit(snapshot.size - maxMessages).get();
-            const batch = db.batch();
-            oldMessagesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
+            // Check message count and trim old messages if necessary
+            const maxMessages = 50;  // Adjust as needed
+            const snapshot = await messagesCollection.orderBy('timestamp').get();
+            if (snapshot.size > maxMessages) {
+                const oldMessagesSnapshot = await messagesCollection.orderBy('timestamp').limit(snapshot.size - maxMessages).get();
+                const batch = db.batch();
+                oldMessagesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+            }
+        } catch (error) {
+            console.error('Error handling message:', error);
         }
     });
+    
 
       // Leave the chat room when the user disconnects
       socket.on('disconnect', () => {
