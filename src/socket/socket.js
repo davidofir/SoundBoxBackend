@@ -1,6 +1,6 @@
 const { Server } = require('socket.io');
 const { admin, db } = require('../firebase');  // Import from your config file
-
+const crypto = require('crypto');
 function setupSocket(server) {
   const io = new Server(server, {
     cors: {
@@ -27,10 +27,14 @@ function setupSocket(server) {
         // Save the message to Firestore
         const messagesCollection = db.collection('chat-rooms').doc(roomId).collection('messages');
         try {
+          let receiverID = roomId.replace(message.user._id,'');
+          receiverID = receiverID.replace('-','');
             await messagesCollection.add({
+                id:crypto.randomBytes(16).toString('hex'),
                 message: message.text,
                 timestamp: admin.firestore.FieldValue.serverTimestamp(),
                 senderID: message.user._id,
+                receiverID: receiverID
             });
     
             // Broadcast the message to all users in the room
