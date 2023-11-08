@@ -22,40 +22,35 @@ function setupSocket(server) {
       // Listen for incoming messages from the room
       socket.on('message', async (message) => {
         console.log('Received message:', message);
-        console.log(`To room`, roomId);
-    
+      
         const messagesCollection = db.collection('chat-rooms').doc(roomId).collection('messages');
         
         try {
-            // Check if the message ID already exists to prevent duplicates
-            const existingDoc = await messagesCollection.doc(message.id).get();
+          // Check if the message ID already exists to prevent duplicates
+          const existingDoc = await messagesCollection.doc(message._id).get();
+          
+          if (!existingDoc.exists) {
+            await messagesCollection.doc(message._id).set({
+              message: message.text,
+              timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              senderID: message.user._id,
+              receiverID: roomId.replace(message.user._id,'').replace('-','')
+            });
+      
+            // Broadcast the message to all users in the room EXCEPT the sender
+            socket.to(roomId).emit('message', message);
             
-            if (!existingDoc.exists) {
-                // If the message is new, add it to Firestore
-                await messagesCollection.doc(message.id).set({
-                    message: message.text,
-                    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-                    senderID: message.user._id,
-                    receiverID: roomId.replace(message.user._id,'').replace('-','')
-                });
-    
-                // Broadcast the message to all users in the room
-                socket.to(roomId).emit('message', message);
-                
-                // Optionally, send an acknowledgment back to the sender
-                socket.emit('message-ack', { id: message.id });
-    
-                // Handle trimming of old messages...
-                // Your existing code for trimming messages can remain the same
-            } else {
-                console.log(`Duplicate message received with ID: ${message.id}`);
-                // Optionally, resend the acknowledgment in case the original was lost
-                socket.emit('message-ack', { id: message.id });
-            }
+            // Acknowledge the sender only, without emitting it to the room
+            socket.emit('message-ack', { id: message._id });
+          } else {
+            console.log(`Duplicate message received with ID: ${message._id}`);
+            // Acknowledge the sender to confirm receipt
+            socket.emit('message-ack', { id: message._id });
+          }
         } catch (error) {
-            console.error('Error handling message:', error);
+          console.error('Error handling message:', error);
         }
-    });
+      });
     
     
 
