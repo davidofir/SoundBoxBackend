@@ -33,17 +33,11 @@ app.get('/getPastMessages/:roomId', cors(), async (req, res) => {
 
     const messagesRef = db.collection('chat-rooms').doc(roomId).collection('messages');
     const snapshot = await messagesRef.orderBy('timestamp','desc').get();
-    
-    if (!snapshot.empty) {
       let messages = [];
       snapshot.forEach(doc => {
         messages.push(doc.data());
       });
       res.json(messages);
-    } else {
-      console.error('No messages found!');
-      res.status(404).send('No Messages Found');
-    }
   } catch (error) {
     console.error('Error fetching messages:', error);
     res.status(500).send('Internal Server Error');
