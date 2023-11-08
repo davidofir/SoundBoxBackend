@@ -23,23 +23,36 @@ function setupSocket(server) {
       socket.on('message', async (message) => {
         console.log('Received message:', message);
       
-        const messagesCollection = db.collection('chat-rooms').doc(roomId).collection('messages');
-        
+        // Reference to the room's document, whether it exists or not
+        const roomDocRef = db.collection('chat-rooms').doc(roomId);
+      
         try {
-          // Check if the message ID already exists to prevent duplicates
+          // Attempt to get the document
+          const roomDoc = await roomDocRef.get();
+      
+          // Check if the room document exists
+          if (!roomDoc.exists) {
+            console.log(`Room ${roomId} does not exist. Creating...`);
+      
+            // Create the room with some initial data as needed
+            await roomDocRef.set({ created: admin.firestore.FieldValue.serverTimestamp() });
+          }
+      
+          // Proceed to work with the messages collection within the room document
+          const messagesCollection = roomDocRef.collection('messages');
           const existingDoc = await messagesCollection.doc(message._id).get();
-          
+      
           if (!existingDoc.exists) {
             await messagesCollection.doc(message._id).set({
               message: message.text,
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
               senderID: message.user._id,
-              receiverID: roomId.replace(message.user._id,'').replace('-','')
+              receiverID: roomId.replace(message.user._id, '').replace('-', '')
             });
       
             // Broadcast the message to all users in the room EXCEPT the sender
             socket.to(roomId).emit('message', message);
-            
+      
             // Acknowledge the sender only, without emitting it to the room
             socket.emit('message-ack', { id: message._id });
           } else {
@@ -51,6 +64,7 @@ function setupSocket(server) {
           console.error('Error handling message:', error);
         }
       });
+      
     
     
 
