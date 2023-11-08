@@ -32,7 +32,7 @@ app.get('/getPastMessages/:roomId', cors(), async (req, res) => {
     const { roomId } = req.params;
 
     const messagesRef = db.collection('chat-rooms').doc(roomId).collection('messages');
-    const snapshot = await messagesRef.orderBy('timestamp','asc').get();
+    const snapshot = await messagesRef.orderBy('timestamp','desc').get();
     
     if (!snapshot.empty) {
       let messages = [];
