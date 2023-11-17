@@ -7,9 +7,9 @@ const puppeteer = require('puppeteer');
 const merchRepo = require('./repositories/MerchRepo');
 const http = require('http');
 const server = http.createServer(app);
-const setupSocket = require('./socket/socket');
+const setupSocket = require('./socket/Socket');
 
-const { admin, db } = require('./firebase');  // Import from your config file
+const { admin, db } = require('./Firebase');  // Import from your config file
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -49,7 +49,23 @@ app.get('/getPastMessages/:roomId', cors(), async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+app.post('/registerToken', cors(), async (req, res) => {
+  try {
+    const { userId, token } = req.body;
+    if (!userId || !token) {
+      res.status(400).send('Bad Request: userId and token required');
+      return;
+    }
 
+    const userRef = db.collection('users').doc(userId);
+    await userRef.set({ pushToken: token }, { merge: true });
+
+    res.status(200).send('Token registered successfully');
+  } catch (error) {
+    console.error('Error registering token:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
 
 app.post('/createMessage', cors(), async (req, res) => {
   try {

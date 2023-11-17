@@ -1,6 +1,7 @@
 const { Server } = require('socket.io');
 const { admin, db } = require('../firebase');  // Import from your config file
 const crypto = require('crypto');
+const {sendPushNotifications} = require('../NotificationService');
 function setupSocket(server) {
   const io = new Server(server, {
     cors: {
@@ -52,6 +53,7 @@ function setupSocket(server) {
       
             // Broadcast the message to all users in the room EXCEPT the sender
             socket.to(roomId).emit('message', message);
+<<<<<<< Updated upstream
       
             // Acknowledge the sender only, without emitting it to the room
             socket.emit('message-ack', { id: message._id });
@@ -60,6 +62,21 @@ function setupSocket(server) {
             // Acknowledge the sender to confirm receipt
             socket.emit('message-ack', { id: message._id });
           }
+=======
+            
+            sendPushNotification(receiverID, message).catch(error => {
+              console.error('Error sending push notification:', error);
+            });
+            // Check message count and trim old messages if necessary
+            const maxMessages = 50;  // Adjust as needed
+            const snapshot = await messagesCollection.orderBy('timestamp').get();
+            if (snapshot.size > maxMessages) {
+                const oldMessagesSnapshot = await messagesCollection.orderBy('timestamp').limit(snapshot.size - maxMessages).get();
+                const batch = db.batch();
+                oldMessagesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+            }
+>>>>>>> Stashed changes
         } catch (error) {
           console.error('Error handling message:', error);
         }
