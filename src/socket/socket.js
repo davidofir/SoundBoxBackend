@@ -45,6 +45,7 @@ function setupSocket(server) {
       
           if (!existingDoc.exists) {
             await messagesCollection.doc(message._id).set({
+              id:crypto.randomBytes(16).toString('hex'),
               message: message.text,
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
               senderID: message.user._id,
