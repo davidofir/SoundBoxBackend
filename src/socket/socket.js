@@ -53,16 +53,6 @@ function setupSocket(server) {
       
             // Broadcast the message to all users in the room EXCEPT the sender
             socket.to(roomId).emit('message', message);
-<<<<<<< Updated upstream
-      
-            // Acknowledge the sender only, without emitting it to the room
-            socket.emit('message-ack', { id: message._id });
-          } else {
-            console.log(`Duplicate message received with ID: ${message._id}`);
-            // Acknowledge the sender to confirm receipt
-            socket.emit('message-ack', { id: message._id });
-          }
-=======
             
             sendPushNotification(receiverID, message).catch(error => {
               console.error('Error sending push notification:', error);
@@ -76,8 +66,8 @@ function setupSocket(server) {
                 oldMessagesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
                 await batch.commit();
             }
->>>>>>> Stashed changes
-        } catch (error) {
+          }
+          } catch (error) {
           console.error('Error handling message:', error);
         }
       });
