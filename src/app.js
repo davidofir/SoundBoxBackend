@@ -7,9 +7,9 @@ const puppeteer = require('puppeteer');
 const merchRepo = require('./repositories/MerchRepo');
 const http = require('http');
 const server = http.createServer(app);
-const setupSocket = require('./socket/Socket');
+const setupSocket = require('./socket/socket');
 
-const { admin, db } = require('./Firebase');  // Import from your config file
+const { admin, db } = require('./firebase');  // Import from your config file
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
