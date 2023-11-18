@@ -1,6 +1,7 @@
 const { Server } = require('socket.io');
 const { admin, db } = require('../firebase');  // Import from your config file
 const crypto = require('crypto');
+const { sendPushNotification } = require('../NotificationService');
 function setupSocket(server) {
   const io = new Server(server, {
     cors: {
@@ -39,7 +40,7 @@ function setupSocket(server) {
     
             // Broadcast the message to all users in the room
             socket.to(roomId).emit('message', message);
-    
+            await sendPushNotification(receiverID,message);
             // Check message count and trim old messages if necessary
             const maxMessages = 50;  // Adjust as needed
             const snapshot = await messagesCollection.orderBy('timestamp').get();
