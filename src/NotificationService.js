@@ -1,4 +1,4 @@
-const { admin, db } = require('../firebase');
+const { admin, db } = require('./firebase');
 const { Expo } = require('expo-server-sdk');
 let expo = new Expo();
 
