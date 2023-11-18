@@ -14,6 +14,7 @@ async function sendPushNotification(receiverId, message) {
   let notifications = [{
     to: doc.data().token,
     sound: 'default',
+    title: `Message from ${message.user.name}`,
     body: message.text,
     data: { withSome: 'data' },
   }];
