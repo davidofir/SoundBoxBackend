@@ -31,7 +31,8 @@ function setupSocket(server) {
           let receiverID = roomId.replace(message.user._id,'');
           receiverID = receiverID.replace('-','');
             await messagesCollection.add({
-                id:crypto.randomBytes(16).toString('hex'),
+                //id:crypto.randomBytes(16).toString('hex'),
+                id:message.id,
                 message: message.text,
                 timestamp: admin.firestore.FieldValue.serverTimestamp(),
                 senderID: message.user._id,
