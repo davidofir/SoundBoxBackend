@@ -10,6 +10,7 @@ function setupSocket(server) {
   });
 
   io.on('connection', (socket) => {
+    let currId = null;
     console.log(`⚡: ${socket.id} user just connected!`);  // Log new user connection
 
     socket.on('join-room', (roomId, userId) => {
@@ -24,9 +25,11 @@ function setupSocket(server) {
       socket.on('message', async (message) => {  // Made async to allow await
         console.log('Received message:', message);  // Log the received message
         console.log(`To room`, roomId);
-    
+        if(currId !== message.id){
+        currId = message.id;
         // Save the message to Firestore
         const messagesCollection = db.collection('chat-rooms').doc(roomId).collection('messages');
+
         try {
           let receiverID = roomId.replace(message.user._id,'');
           receiverID = receiverID.replace('-','');
@@ -54,6 +57,7 @@ function setupSocket(server) {
         } catch (error) {
             console.error('Error handling message:', error);
         }
+      }
     });
     
 
