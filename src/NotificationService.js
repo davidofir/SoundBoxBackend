@@ -6,18 +6,20 @@ async function sendPushNotification(receiverId, message) {
   const userRef = db.collection('users').doc(receiverId);
   const doc = await userRef.get();
 
-  if (!doc.exists || !Expo.isExpoPushToken(doc.data().token)) {
-    console.error('No valid push token found for user:', receiverId);
+  if (!doc.exists || !doc.data().tokens || !Array.isArray(doc.data().tokens)) {
+    console.error('No valid push tokens found for user:', receiverId);
     return;
   }
 
-  let notifications = [{
-    to: doc.data().token,
-    sound: 'default',
-    title: `Message from ${message.user.name}`,
-    body: message.text,
-    data: { withSome: 'data' },
-  }];
+  let notifications = doc.data().tokens
+    .filter(token => Expo.isExpoPushToken(token)) // Filter out any invalid tokens
+    .map(token => ({
+      to: token,
+      sound: 'default',
+      title: `Message from ${message.user.name}`,
+      body: message.text,
+      data: { withSome: 'data' },
+    }));
 
   let chunks = expo.chunkPushNotifications(notifications);
   for (let chunk of chunks) {
